@@ -1,42 +1,77 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>证书查看</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body, html { margin:0; height:100vh; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-y: auto;
+      font-family: Arial, sans-serif;
+    }
+    #pdf-viewer {
+      padding: 10px;
+    }
+    #pdf-viewer canvas {
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
 <body>
-  <div id="container" style="height:100%;"></div>
+  <div id="pdf-viewer">正在加载证书...</div>
+
+  <!-- 引入 PDF.js 库（CDN） -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 
   <script>
-    function getQueryParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
-    const certid = getQueryParam('certid');
-    const container = document.getElementById('container');
+    const certid = new URLSearchParams(window.location.search).get('certid');
+    const viewer = document.getElementById('pdf-viewer');
 
     if (!certid) {
-      container.innerHTML = '请提供证书编号参数（certid）';
+      viewer.innerText = '请提供证书编号参数（certid）';
     } else {
       fetch('https://script.google.com/macros/s/AKfycbxlzClXVgFZb0EbtkmKoxQ33j-5ugkZqEIuGHocbpwNC1BmwGBDxgJ0zGmqEgU2PHpK/exec')
         .then(res => res.json())
         .then(data => {
           const cert = data.find(item => String(item.cert_id) === String(certid));
-          if (cert && cert.pdf_url) {
-            // 直接用pdf_url预览
-            container.innerHTML = `<iframe src="${cert.pdf_url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+          if (cert) {
+            // 你自己的 GitHub Pages 路径，例如 PDF 文件都放在 certificates 文件夹下
+            const pdfUrl = `https://yourusername.github.io/yourrepo/certificates/${certid}.pdf`;
+            renderPDF(pdfUrl);
           } else {
-            container.innerHTML = '证书不存在或无效';
+            viewer.innerText = '证书不存在或无效';
           }
         })
-        .catch(err => {
-          container.innerHTML = '加载证书数据出错';
-          console.error(err);
+        .catch(() => {
+          viewer.innerText = '加载证书数据出错';
         });
+
+      function renderPDF(url) {
+        const loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(pdf => {
+          viewer.innerHTML = '';
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            pdf.getPage(pageNum).then(page => {
+              const canvas = document.createElement('canvas');
+              viewer.appendChild(canvas);
+              const context = canvas.getContext('2d');
+              const viewport = page.getViewport({ scale: 1.5 });
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              page.render({ canvasContext: context, viewport: viewport });
+            });
+          }
+        }).catch(() => {
+          viewer.innerText = '加载 PDF 文件失败';
+        });
+      }
     }
   </script>
 </body>
