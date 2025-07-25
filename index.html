@@ -11,13 +11,7 @@
   <div id="container" style="height:100%;"></div>
 
   <script>
-    // 证书数据
-    const certData = {
-      '12345': 'https://drive.google.com/file/d/15kDxKHri7_7AFYFpkr5oZdAlXg8Hlfyo/view?usp=drive_link',
-      // 你可以继续添加更多证书
-    };
-
-    // 获取URL参数
+    // 从URL参数获取certid
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
@@ -37,18 +31,32 @@
     const certid = getQueryParam('certid');
     const container = document.getElementById('container');
 
-    if (certid && certData[certid]) {
-      const fileId = getGoogleDriveFileId(certData[certid]);
-      if (fileId) {
-        const directLink = getDirectLink(fileId);
-        container.innerHTML = `<embed src="${directLink}" width="100%" height="100%" type="application/pdf" />`;
-      } else {
-        container.innerHTML = '证书链接格式不正确';
-      }
+    if (!certid) {
+      container.innerHTML = '请提供证书编号参数（certid）';
     } else {
-      container.innerHTML = '证书不存在或无效';
+      // 通过fetch请求Apps Script接口获取数据
+      fetch('https://script.google.com/macros/s/AKfycbxlzClXVgFZb0EbtkmKoxQ33j-5ugkZqEIuGHocbpwNC1BmwGBDxgJ0zGmqEgU2PHpK/exec')
+        .then(response => response.json())
+        .then(data => {
+          // data 是一个数组 [{cert_id: '120', pdf_url: '链接'}, ...]
+          const cert = data.find(item => item.cert_id === certid);
+          if (cert && cert.pdf_url) {
+            const fileId = getGoogleDriveFileId(cert.pdf_url);
+            if (fileId) {
+              const directLink = getDirectLink(fileId);
+              container.innerHTML = `<embed src="${directLink}" width="100%" height="100%" type="application/pdf" />`;
+            } else {
+              container.innerHTML = '证书链接格式不正确';
+            }
+          } else {
+            container.innerHTML = '证书不存在或无效';
+          }
+        })
+        .catch(err => {
+          container.innerHTML = '加载证书数据出错';
+          console.error(err);
+        });
     }
   </script>
 </body>
 </html>
-<!-- 测试修改 -->
