@@ -11,19 +11,16 @@
   <div id="container" style="height:100%;"></div>
 
   <script>
-    // 从URL参数获取certid
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
 
-    // 从谷歌云盘分享链接提取文件ID
     function getGoogleDriveFileId(url) {
       const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
       return match ? match[1] : null;
     }
 
-    // 转换为直链
     function getDirectLink(fileId) {
       return `https://drive.google.com/uc?export=download&id=${fileId}`;
     }
@@ -34,11 +31,9 @@
     if (!certid) {
       container.innerHTML = '请提供证书编号参数（certid）';
     } else {
-      // 通过fetch请求Apps Script接口获取数据
       fetch('https://script.google.com/macros/s/AKfycbxlzClXVgFZb0EbtkmKoxQ33j-5ugkZqEIuGHocbpwNC1BmwGBDxgJ0zGmqEgU2PHpK/exec')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-          // data 是一个数组 [{cert_id: '120', pdf_url: '链接'}, ...]
           const cert = data.find(item => item.cert_id === certid);
           if (cert && cert.pdf_url) {
             const fileId = getGoogleDriveFileId(cert.pdf_url);
