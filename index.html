@@ -34,7 +34,7 @@
       fetch('https://script.google.com/macros/s/AKfycbxlzClXVgFZb0EbtkmKoxQ33j-5ugkZqEIuGHocbpwNC1BmwGBDxgJ0zGmqEgU2PHpK/exec')
         .then(res => res.json())
         .then(data => {
-          const cert = data.find(item => item.cert_id === certid);
+          const cert = data.find(item => String(item.cert_id) === String(certid));
           if (cert && cert.pdf_url) {
             const fileId = getGoogleDriveFileId(cert.pdf_url);
             if (fileId) {
