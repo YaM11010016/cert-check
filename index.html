@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>证书验证</title>
+</head>
+<body>
+  <h2>证书验证结果</h2>
+  <div id="result">正在验证，请稍等…</div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const certid = urlParams.get('certid');
+    const apiUrl = `https://sheetdb.io/api/v1/lomrblh1ekn9t/search?cert_id=${certid}`;
+
+    if (!certid) {
+      document.getElementById('result').innerText = '请通过扫码方式访问（带证书编号）';
+    } else {
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length === 0) {
+            document.getElementById('result').innerText = '❌ 证书不存在或无效';
+          } else {
+            const cert = data[0];
+            document.getElementById('result').innerHTML = `
+              ✅ 证书有效<br>
+              <a href="${cert.pdf_url}" target="_blank">点击查看证书 PDF</a>
+            `;
+          }
+        })
+        .catch(err => {
+          document.getElementById('result').innerText = '❌ 查询失败，请稍后重试';
+          console.error(err);
+        });
+    }
+  </script>
+</body>
+</html>
