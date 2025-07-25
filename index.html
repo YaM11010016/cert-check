@@ -21,8 +21,9 @@
       return match ? match[1] : null;
     }
 
+    // 改为预览链接，浏览器内嵌显示PDF
     function getDirectLink(fileId) {
-      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+      return `https://drive.google.com/file/d/${fileId}/preview`;
     }
 
     const certid = getQueryParam('certid');
